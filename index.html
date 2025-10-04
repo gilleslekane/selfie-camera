@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Open front (selfie) camera</title>
+  <meta name="description" content="Opens the front (selfie) camera when the page is opened. Requires HTTPS and user permission.">
+  <style>
+    html,body{height:100%;margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:#f7f7f7;color:#111}
+    .wrap{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:18px}
+    video{max-width:100%;width:360px;border-radius:10px;background:#000;box-shadow:0 6px 18px rgba(0,0,0,0.12)}
+    button{padding:10px 14px;border-radius:8px;border:1px solid #ccc;background:#fff;font-size:16px;cursor:pointer}
+    .notice{font-size:14px;color:#444;text-align:center;max-width:420px}
+    .error{color:#b72828}
+    .small{font-size:12px;color:#666}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h2>Open the selfie camera</h2>
+    <video id="video" autoplay playsinline muted></video>
+    <div class="notice">This page will ask permission to use your camera. If it doesn't start automatically, tap the button below and allow camera access.</div>
+    <button id="startBtn" type="button">Start camera</button>
+    <div id="status" class="notice small"></div>
+    <div class="small">Tip: This page must be served over <strong>HTTPS</strong> (GitHub Pages, Netlify, Vercel...). You will be asked to allow camera access — this cannot be bypassed.</div>
+  </div>
+
+  <script>
+    const video = document.getElementById('video');
+    const startBtn = document.getElementById('startBtn');
+    const status = document.getElementById('status');
+
+    async function startCamera() {
+      status.textContent = 'Requesting camera permission…';
+      try {
+        // Prefer front-facing camera (facingMode: "user")
+        const constraints = {
+          audio: false,
+          video: {
+            facingMode: { ideal: "user" },
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
+        };
+
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject = stream;
+        status.textContent = 'Camera active. If you want to switch, use your browser camera controls.';
+      } catch (err) {
+        console.error(err);
+        status.innerHTML = '<span class="error">Unable to access camera: ' + (err.message || err.name) + '</span>';
+      }
+    }
+
+    // Try to start automatically on load (may be blocked by browser without a user gesture)
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        startCamera().catch(()=>{ /* ignore - fallback to button */ });
+      }, 250);
+    });
+
+    // Fallback user gesture
+    startBtn.addEventListener('click', () => startCamera());
+  </script>
+</body>
+</html>
